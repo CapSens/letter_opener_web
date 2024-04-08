@@ -20,7 +20,7 @@ Gem::Specification.new do |gem|
   gem.require_paths = ['lib']
 
   gem.add_dependency 'actionmailer', '>= 5.2'
-  gem.add_dependency 'aws-sdk-s3', '~> 1.142'
+  gem.add_dependency 'aws-sdk-s3', '~> 1.0'
   gem.add_dependency 'letter_opener', '~> 1.7'
   gem.add_dependency 'railties', '>= 5.2'
   gem.add_dependency 'rexml'
