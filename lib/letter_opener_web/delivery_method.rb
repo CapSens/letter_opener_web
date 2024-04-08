@@ -5,10 +5,21 @@ require 'letter_opener/delivery_method'
 module LetterOpenerWeb
   class DeliveryMethod < LetterOpener::DeliveryMethod
     def deliver!(mail)
-      original = ENV['LAUNCHY_DRY_RUN']
+      original = ENV.fetch('LAUNCHY_DRY_RUN', nil)
       ENV['LAUNCHY_DRY_RUN'] = 'true'
 
-      super
+      if LetterOpenerWeb.config.letters_storage == :s3
+        validate_mail!(mail)
+        location = File.join(
+          settings[:location],
+          "#{Time.now.to_f.to_s.tr('.', '_')}_#{Digest::SHA1.hexdigest(mail.encoded)[0..6]}"
+        )
+
+        messages = LetterOpenerWeb::S3Message.rendered_messages(mail, location: location,
+                                                                      message_template: settings[:message_template])
+      else
+        super
+      end
     rescue Launchy::CommandNotFoundError
       # Ignore for non-executable Launchy environment.
     ensure

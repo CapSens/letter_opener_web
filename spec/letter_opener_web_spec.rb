@@ -7,9 +7,12 @@ RSpec.describe LetterOpenerWeb do
   after(:each) { described_class.reset! }
 
   describe '.config' do
-    it 'sets defaults' do
-      expected = Rails.root.join('tmp', 'letter_opener')
-      expect(subject.config.letters_location).to eq(expected)
+    it 'sets default letters_storage' do
+      expect(subject.config.letters_storage).to eq(:local)
+    end
+
+    it 'sets default letters_location' do
+      expect(subject.config.letters_location).to eq(Rails.root.join('tmp', 'letter_opener'))
     end
   end
 

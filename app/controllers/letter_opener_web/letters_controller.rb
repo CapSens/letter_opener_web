@@ -10,13 +10,13 @@ module LetterOpenerWeb
     before_action :load_letter, only: %i[show attachment destroy]
 
     def index
-      @letters = LetterOpenerWeb::Letter.search
+      @letters = letter_model.search
     end
 
     def show
       text = @letter.send("#{params[:style]}_text")
-                    .gsub(/"plain\.html"/, "\"#{routes.letter_path(id: @letter.id, style: 'plain')}\"")
-                    .gsub(/"rich\.html"/, "\"#{routes.letter_path(id: @letter.id, style: 'rich')}\"")
+                    .gsub('"plain.html"', "\"#{routes.letter_path(id: @letter.id, style: 'plain')}\"")
+                    .gsub('"rich.html"', "\"#{routes.letter_path(id: @letter.id, style: 'rich')}\"")
 
       render html: text.html_safe
     end
@@ -26,12 +26,13 @@ module LetterOpenerWeb
       file     = @letter.attachments[filename]
 
       return render plain: 'Attachment not found!', status: 404 unless file.present?
+      return redirect_to(file, allow_other_host: true) if LetterOpenerWeb.config.letters_storage == :s3
 
       send_file(file, filename: filename, disposition: 'inline')
     end
 
     def clear
-      LetterOpenerWeb::Letter.destroy_all
+      letter_model.destroy_all
       redirect_to routes.letters_path
     end
 
@@ -50,13 +51,22 @@ module LetterOpenerWeb
     end
 
     def load_letter
-      @letter = LetterOpenerWeb::Letter.find(params[:id])
+      @letter = letter_model.find(params[:id])
 
       head :not_found unless @letter.valid?
     end
 
     def routes
       LetterOpenerWeb.railtie_routes_url_helpers
+    end
+
+    def letter_model
+      case LetterOpenerWeb.config.letters_storage
+      when :s3
+        LetterOpenerWeb::AwsLetter
+      else
+        LetterOpenerWeb::Letter
+      end
     end
   end
 end
