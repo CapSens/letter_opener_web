@@ -18,7 +18,7 @@ module LetterOpenerWeb
         new(id: File.basename(File.dirname(prefix.prefix)))
       end
 
-      letters.reverse
+      letters.uniq(&:id).reverse
     end
 
     def self.destroy_all
